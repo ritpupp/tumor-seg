@@ -18,5 +18,12 @@
 | val | 16 | 621 | 33.7% |
 | test | 17 | 589 | 39.0% |
 
+## Data pipeline (step 3)
+Batch: x (16,3,256,256) float32, ImageNet-normalized; y (16,1,256,256) float32 in {0,1}. Tumor pixels ≈ 0.7–1.6% per batch (heavy class imbalance).
+
+## Overfit test (step 4)
+U-Net resnet34 (ImageNet), Dice+BCE, Adam 1e-3, 16 tumor-only train slices (16 patients), MPS.
+Mean Dice 0.927 / IoU 0.871 at step 50 (target > 0.9) — PASS. Per-image Dice 0.70–0.97.
+
 ## Model metrics
-Not yet trained.
+Training (step 5): train.py smoke-tested (3 epochs, 50 slices) — pipeline OK. **Full training run pending (user GPU run).**

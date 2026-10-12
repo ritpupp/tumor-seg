@@ -3,11 +3,11 @@
        from folder names, report % of slices with empty masks, save outputs/samples.png
        (6 image+mask overlays). DONE WHEN: counts printed and overlays visibly aligned.
 2. [x] Patient-level split 70/15/15 -> splits.json. DONE WHEN: assert no patient is in two sets.
-3. [ ] Dataset + dataloader + augmentation (flips, small rotation, brightness), normalize.
+3. [x] Dataset + dataloader + augmentation (flips, small rotation, brightness), normalize.
        DONE WHEN: batch shapes printed, outputs/aug_preview.png looks sane.
-4. [ ] Model: smp.Unet(resnet34, imagenet weights), Dice+BCE loss. Overfit test on 16 images.
+4. [x] Model: smp.Unet(resnet34, imagenet weights), Dice+BCE loss. Overfit test on 16 images.
        DONE WHEN: Dice > 0.9 on those 16 images.
-5. [ ] train.py (args, mixed precision, best checkpoint by val Dice, curves png).
+5. [x] train.py (args, mixed precision, best checkpoint by val Dice, curves png).
        Smoke-test with --max-samples 50. CHECKPOINT: stop, I run the full train on a GPU.
 6. [ ] Evaluate on test set: per-patient Dice and IoU (mean +- std) -> RESULTS.md.
 7. [ ] Error analysis: best/median/worst patient overlays, Dice vs tumor size plot, 3 failure modes.
