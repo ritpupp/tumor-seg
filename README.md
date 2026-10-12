@@ -1,5 +1,3 @@
-# Brain tumor segmentation on LGG MRI (U-Net)
-
 <img width="1448" height="1086" alt="image" src="https://github.com/user-attachments/assets/2362a988-80f1-45e3-ae74-d78f6b1ad3f5" />
 
 
