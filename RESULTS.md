@@ -140,3 +140,12 @@ Size buckets **excluding HT_A5RC and FG_A60K** (so the two outliers don't drive 
 - Test false-positive empty slices 30 → 13; tumor slices with no prediction 31 → 37 (the increase is FG_A60K).
 - Val (selection metric, all slices): v1 0.855 ± 0.106 vs v2 0.844 ± 0.120; tumor-only 0.873 vs 0.864. Val does not favour v2.
 - Caveats: one training run per model, 17 test patients; the test gain is dominated by one patient, so this does not show v2 is better in general. Full table: `outputs/v2/v1_vs_v2.md`.
+
+## Tumor volume, v1 (relative, pixels)
+From `outputs/test_per_slice.csv` (no inference; `src/volume.py` → `outputs/volume_v1.csv`). Volume = tumor pixels summed over all of a patient's slices, including false positives on tumor-free slices. **This is a relative measure in pixels, not cm³**: the images carry no mm spacing.
+
+- Absolute % error per patient: mean 89.4%, **median 9.5%** (mean driven by FG_A60K).
+- Bias: no consistent direction. 8 patients over-estimated, 9 under-estimated; median signed error −0.9%. Summed over patients, predicted is +22.9% above true, almost all from FG_A60K.
+- Predicted vs true volume: Pearson r = 0.610, Spearman ρ = 0.625; **excluding HT_A5RC and FG_A60K (n=15): Pearson r = 0.966**, median abs % error 5.6%.
+- **HT_A5RC:** 312 vs 17,188 px (−98.2%). **FG_A60K:** 98,336 vs 7,719 px (+1173.9%).
+- **Small tumors are likely underestimated**: slices with < 250 px of tumor are often missed entirely (step 7). At patient level the evidence is weak (Spearman between true volume and signed % error 0.056; 0.193 without the two outliers), and the smallest-volume failure, FG_A60K, was overestimated.

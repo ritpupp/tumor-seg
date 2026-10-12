@@ -161,6 +161,19 @@ Both versions of the test comparison are shown below: all 17 patients, and witho
 Without the two outliers v2 is ahead in every size bucket, most for the smallest tumors, but the < 250 px bucket
 has only 12 slices. v2's training curves: [`outputs/v2/train_curves.png`](outputs/v2/train_curves.png).
 
+## Tumor volume (v1)
+
+Per test patient, predicted and true tumor pixels summed over all slices (`python src/volume.py`, computed from
+the saved test results without re-running the model; table in [`outputs/volume_v1.csv`](outputs/volume_v1.csv)).
+**This is a relative measure in pixels, not cm³**: these images do not store pixel spacing.
+
+- Median absolute error 9.5% per patient (mean 89.4%, driven by FG_A60K); no consistent bias (8 patients
+  over-, 9 under-estimated; median signed error −0.9%).
+- Predicted vs true volume: Pearson r = 0.610; **r = 0.966 without HT_A5RC and FG_A60K** (n=15).
+- HT_A5RC: 312 vs 17,188 px (−98.2%). FG_A60K: 98,336 vs 7,719 px (+1173.9%).
+- **Small tumors are likely underestimated**, because slices with little tumor are often missed (see Error
+  analysis); the per-patient evidence for this is weak, and FG_A60K, a small tumor, was overestimated instead.
+
 ## Demo
 
 ```bash

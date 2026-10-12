@@ -54,3 +54,8 @@
 - What: checked v2's norm on val first (eval reproduced its checkpoint val Dice 0.8445 vs 0.8444; v1 still reproduces 0.8546), then evaluated v2 on test once and compared from saved CSVs: test tumor-only Dice 0.778 → 0.814, but val 0.855 → 0.844; HT_A5RC 0.036 → 0.676, FG_A60K 0.121 → 0.000 (over-segmentation became a miss).
 - Why: per-image normalization was meant to fix intensity-driven failures; it fixed the dark-FLAIR patient (supporting the channel-balance suspicion from step 7) but not the grayscale one. v1 stays headline because selection is by val, and one patient explains most of the test gain.
 - Wrong result looks like: v2 eval on val not reproducing its checkpoint (wrong norm applied at eval), v1 test CSVs changing (accidental re-run/overwrite), or a "better" mean that comes entirely from one patient being reported as a general improvement.
+
+## Tumor volume (v1)
+- What: summed predicted and true tumor pixels per test patient from the saved per-slice CSV (no inference): median abs % error 9.5%, Pearson r 0.610 (0.966 without HT_A5RC and FG_A60K), no consistent bias (8 over, 9 under).
+- Why: volume is what a reader of a scan might want; pooling pixels shows whether segmentation errors cancel or add up per patient, and pixels are the only honest unit here (no mm spacing).
+- Wrong result looks like: volumes reported in cm³ (no spacing exists), predicted totals that disagree with summing pred_px in the CSV, or a strong correlation that vanishes once one or two patients are removed.
