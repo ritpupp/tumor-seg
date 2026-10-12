@@ -1,6 +1,7 @@
 data/
 .venv/
 *.pt
+checkpoints/
 __pycache__/
 logs/
 kaggle.json

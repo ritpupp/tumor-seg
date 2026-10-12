@@ -12,5 +12,5 @@
 6. [x] Evaluate on test set: per-patient Dice and IoU (mean +- std) -> RESULTS.md.
 7. [x] Error analysis: best/median/worst patient overlays, Dice vs tumor size plot, 3 failure modes.
 8. [x] Gradio demo: upload a slice -> mask overlay + tumor area.
-9. [ ] README (problem, data, method, results table, figures, how to run, limitations,
+9. [x] README (problem, data, method, results table, figures, how to run, limitations,
        "research demo, not for clinical use"), requirements.txt, .gitignore data/ and checkpoints.

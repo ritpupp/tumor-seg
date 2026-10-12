@@ -39,3 +39,8 @@
 - What: src/app.py loads best.pt and returns a red overlay plus tumor area for an uploaded slice (any size/mode; resized to 256 and back), with a threshold slider and 3 PNG examples; verified pixel-for-pixel against evaluate.py and via the live server's API.
 - Why: the demo must use exactly the same preprocessing as training/eval, or it silently shows worse (or different) results than the reported metrics.
 - Wrong result looks like: demo area differing from evaluate.py on the same slice (normalization/channel-order mismatch), overlays shifted after resizing, or tumor "detected" on every slice (threshold or sigmoid missing).
+
+## Step 9 — README, requirements, .gitignore
+- What: wrote README (problem, data, method, results table, figures, how to run, limitations, "research demo, not for clinical use"), pinned requirements.txt to the tested versions, added checkpoints/ to .gitignore; checked every README link resolves and installed requirements into a fresh venv to run evaluate.py.
+- Why: a reader should be able to reproduce the numbers from the README alone, and the repo must never carry patient data dumps or 98 MB checkpoints.
+- Wrong result looks like: broken image links in the README, a fresh install failing on a missing package (e.g. opencv for albumentations), README numbers that disagree with RESULTS.md, or data/ / *.pt showing up in git status.

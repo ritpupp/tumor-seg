@@ -92,3 +92,6 @@ Minor: a few false positives on FLAIR-bright non-tumor regions (e.g. periventric
 
 ## Demo (step 8)
 `python src/app.py` → http://127.0.0.1:7860. Upload a slice → red overlay + tumor area (pixels and % of head area; no mm² because pixel spacing isn't stored in the images). Threshold slider, 3 example slices in `examples/`. Checked: demo pixel counts match `evaluate.py` exactly on 3 test slices (TIF and PNG), and the running server answers through its API. Output examples: `outputs/demo_examples.png`.
+
+## Packaging (step 9)
+README.md written with the results above; requirements.txt pinned; data/, .venv/, checkpoints/ and *.pt are git-ignored.
