@@ -196,8 +196,25 @@ python src/app.py                          # 8. Gradio demo
 
 Every script takes `--data-dir` (default `data/kaggle_3m`). On Kaggle, attach the dataset and run e.g.
 `python src/train.py --data-dir /kaggle/input/lgg-mri-segmentation/kaggle_3m` (the exact path depends on the
-dataset version). The trained checkpoint (`checkpoints/best.pt`, ~98 MB) is not in the repo; train it or
-place your own there.
+dataset version).
+
+**Pretrained checkpoints** (not stored in git; download from the GitHub releases, ~98 MB each):
+
+```bash
+# v1, the headline model (used by evaluate.py, error_analysis.py and app.py by default)
+mkdir -p checkpoints
+curl -L -o checkpoints/best.pt https://github.com/ritpupp/tumor-seg/releases/download/v1-baseline/best.pt
+
+# v2, per-image normalization ABLATION (not the headline model); use with --ckpt checkpoints_v2/best.pt
+mkdir -p checkpoints_v2
+curl -L -o checkpoints_v2/best.pt https://github.com/ritpupp/tumor-seg/releases/download/v2-norm/best.pt
+```
+
+SHA-256: v1 `938ce9c1135a50959beb5788384c44d5565edf8c5b6fc80049a6ab73f16c2738`,
+v2 `015c4c4769d76e3c61ef4c5403c59b35bbb2733ce40f3a9f24e4042b06488c77`
+(release pages: [v1-baseline](https://github.com/ritpupp/tumor-seg/releases/tag/v1-baseline),
+[v2-norm](https://github.com/ritpupp/tumor-seg/releases/tag/v2-norm)).
+`train.py` refuses to overwrite an existing `best.pt`, so to train your own model pass a new `--ckpt-dir`.
 
 **Repository layout**
 
