@@ -5,6 +5,7 @@ patient), which is not inflated by the ~65% empty slices. Slice-level Dice is lo
 
 Kaggle example:
   python src/train.py --data-dir /kaggle/input/lgg-mri-segmentation/kaggle_3m --epochs 40
+  v2: add --norm per-image --aug strong --ckpt-dir checkpoints_v2 --out-dir outputs/v2
 """
 import argparse
 import json
@@ -18,7 +19,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 
-from dataset import get_loaders
+from dataset import AUGS, NORMS, get_loaders
 from model import DiceBCELoss, build_model, dice_iou_per_image
 
 
@@ -108,6 +109,11 @@ def main():
     ap.add_argument("--num-workers", type=int, default=4)
     ap.add_argument("--max-samples", type=int, default=None, help="cap slices per split (smoke test)")
     ap.add_argument("--no-amp", action="store_true", help="disable mixed precision (CUDA only anyway)")
+    ap.add_argument("--norm", choices=NORMS, default="imagenet",
+                    help="imagenet = v1; per-image = standardize each channel over the head region")
+    ap.add_argument("--aug", choices=AUGS, default="basic",
+                    help="basic = v1; strong = + contrast, gamma, per-channel gain (image only)")
+    ap.add_argument("--overwrite", action="store_true", help="allow replacing an existing best.pt in --ckpt-dir")
     ap.add_argument("--ckpt-dir", default="checkpoints")
     ap.add_argument("--out-dir", default="outputs")
     ap.add_argument("--seed", type=int, default=42)
@@ -119,7 +125,12 @@ def main():
     use_amp = device.type == "cuda" and not args.no_amp  # fp16 autocast + GradScaler on CUDA
     print(f"Device: {device} | AMP: {use_amp} | args: {vars(args)}")
 
-    loaders = get_loaders(args.data_dir, args.splits, args.batch_size, args.num_workers, args.max_samples)
+    ckpt_dir, out_dir = Path(args.ckpt_dir), Path(args.out_dir)
+    if (ckpt_dir / "best.pt").exists() and not args.overwrite:
+        raise SystemExit(f"{ckpt_dir / 'best.pt'} already exists; use another --ckpt-dir or pass --overwrite")
+    # Test split is never loaded during training; model selection uses val only.
+    loaders = get_loaders(args.data_dir, args.splits, args.batch_size, args.num_workers, args.max_samples,
+                          norm=args.norm, aug=args.aug, splits=("train", "val"))
     print({k: len(v.dataset) for k, v in loaders.items()}, "slices")
 
     model = build_model().to(device)
@@ -128,7 +139,6 @@ def main():
     sched = torch.optim.lr_scheduler.CosineAnnealingLR(opt, T_max=args.epochs)
     scaler = torch.amp.GradScaler(device.type, enabled=use_amp)
 
-    ckpt_dir, out_dir = Path(args.ckpt_dir), Path(args.out_dir)
     ckpt_dir.mkdir(parents=True, exist_ok=True)
     history, best = [], -1.0
     for epoch in range(1, args.epochs + 1):

@@ -45,7 +45,7 @@ def main():
     print(f"Device: {device} | checkpoint epoch {ckpt['epoch']} "
           f"(val per-patient Dice {ckpt['val']['patient_dice']:.4f})")
 
-    ds = LGGDataset(args.data_dir, args.split, args.splits, get_transforms(False), args.max_samples)
+    ds = LGGDataset(args.data_dir, args.split, args.splits, get_transforms(False, norm=ckpt["args"].get("norm", "imagenet")), args.max_samples)
     dl = DataLoader(ds, batch_size=args.batch_size, shuffle=False, num_workers=2)
 
     rows, i = [], 0

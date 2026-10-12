@@ -25,7 +25,7 @@ class Segmenter:
         self.model = build_model(encoder_weights=None)
         self.model.load_state_dict(state["model"])
         self.model.to(self.device).eval()
-        self.tf = get_transforms(False)
+        self.tf = get_transforms(False, norm=state["args"].get("norm", "imagenet"))  # match training
 
     @torch.no_grad()
     def __call__(self, image, threshold=0.5):

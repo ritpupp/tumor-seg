@@ -28,9 +28,10 @@ class Predictor:
     def __init__(self, ckpt, data_dir):
         self.device = get_device()
         self.model = build_model(encoder_weights=None)
-        self.model.load_state_dict(torch.load(ckpt, map_location="cpu", weights_only=False)["model"])
+        state = torch.load(ckpt, map_location="cpu", weights_only=False)
+        self.model.load_state_dict(state["model"])
         self.model.to(self.device).eval()
-        self.tf = get_transforms(False)
+        self.tf = get_transforms(False, norm=state["args"].get("norm", "imagenet"))  # match training
         self.data_dir = Path(data_dir)
 
     @torch.no_grad()

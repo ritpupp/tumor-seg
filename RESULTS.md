@@ -95,3 +95,8 @@ Minor: a few false positives on FLAIR-bright non-tumor regions (e.g. periventric
 
 ## Packaging (step 9)
 README.md written with the results above; requirements.txt pinned; data/, .venv/, checkpoints/ and *.pt are git-ignored.
+
+## v2 (branch v2-norm) — setup only, not yet trained
+Flags: `--norm per-image` (head-region per-channel standardization) and `--aug strong` (intensity only). Everything else identical to v1 (splits.json, seed 42, 40 epochs, resnet34 U-Net, Dice+BCE, AdamW 1e-3, batch 16).
+Smoke test (50 slices, 3 epochs, per-image + strong): runs end to end, checkpoint stores norm/aug. Preview: `outputs/aug_preview_v2.png`.
+Test set NOT evaluated for v2. Model selection by val per-patient Dice only.
