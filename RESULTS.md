@@ -66,3 +66,29 @@ Per-patient test results (`outputs/test_per_patient.csv`):
 | TCGA_HT_7879_19981009 | 28 | 11 | 0.910 | 0.835 | 0.910 | 0.835 |
 | TCGA_HT_8107_19980708 | 20 | 7 | 0.888 | 0.798 | 0.888 | 0.798 |
 | TCGA_HT_A5RC_19990831 | 32 | 15 | 0.036 | 0.018 | 0.036 | 0.018 |
+
+## Error analysis (step 7)
+Figures: `outputs/patients_best_median_worst.png`, `outputs/dice_vs_size.png`, `outputs/failure_cases.png`.
+Per-patient intensity stats: `outputs/patient_intensity_stats.csv`.
+
+**Best / median / worst test patient (tumor-only Dice):** FG_7634 0.944 · CS_4944 0.890 · HT_A5RC 0.036.
+
+**Dice vs tumor size (230 tumor slices):** strongly size-dependent (Spearman ρ = 0.65).
+
+| GT tumor area | Slices | Mean slice Dice | Slices missed entirely |
+|---|---|---|---|
+| < 250 px | 24 | 0.04 | 10 |
+| 250–500 px | 28 | 0.48 | 4 |
+| 500–1k px | 35 | 0.53 | 7 |
+| 1k–2k px | 72 | 0.76 | 9 |
+| > 2k px | 71 | 0.89 | 1 |
+
+**Three failure modes**
+1. **Over-segmentation of a whole hemisphere (FG_A60K, Dice 0.12).** Predicts 73,861 px on tumor slices vs 7,719 px GT and 24,475 px on empty slices; this one patient accounts for 21 of the 30 false-positive empty slices in the test set. The scan is grayscale (all three channels identical), and the model outlines a broad, mildly bright region across one hemisphere instead of the small midline lesion. Grayscale alone is *not* the explanation: 4 train patients are fully grayscale and the grayscale val patient HT_A616 scores 0.90. More likely the diffuse hemispheric brightness looks like tumor when colour (multi-sequence) cues are missing.
+2. **Whole tumor missed (HT_A5RC, Dice 0.04).** 14 of 15 tumor slices get no prediction at all (312 px predicted vs 17,188 px GT), even though the lesions are large (1.5–2.3k px). The tumor is brighter than surrounding brain on FLAIR (contrast 1.48, dataset median 1.57), but the whole FLAIR channel is unusually dark relative to the other two (balance 0.40 vs median 0.94; 4th lowest of 110 patients). This is not sufficient on its own: val patient FG_6688 has balance 0.36 and scores 0.85. **Cause unresolved**; channel imbalance is the leading suspect.
+3. **Small tumors, mostly at the top/bottom edge of a tumor.** Slices with < 250 px of tumor average Dice 0.04 and 10/24 are missed outright. Of the 31 missed tumor slices, 14 are the first or last tumor slice of their patient, although such edge slices are only 15% of tumor slices. Pooled per-patient Dice hides much of this because small slices contribute few pixels.
+
+Minor: a few false positives on FLAIR-bright non-tumor regions (e.g. periventricular brightness in CS_5393, 4 slices).
+
+## Demo (step 8)
+`python src/app.py` → http://127.0.0.1:7860. Upload a slice → red overlay + tumor area (pixels and % of head area; no mm² because pixel spacing isn't stored in the images). Threshold slider, 3 example slices in `examples/`. Checked: demo pixel counts match `evaluate.py` exactly on 3 test slices (TIF and PNG), and the running server answers through its API. Output examples: `outputs/demo_examples.png`.

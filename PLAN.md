@@ -10,7 +10,7 @@
 5. [x] train.py (args, mixed precision, best checkpoint by val Dice, curves png).
        Smoke-test with --max-samples 50. CHECKPOINT: stop, I run the full train on a GPU.
 6. [x] Evaluate on test set: per-patient Dice and IoU (mean +- std) -> RESULTS.md.
-7. [ ] Error analysis: best/median/worst patient overlays, Dice vs tumor size plot, 3 failure modes.
-8. [ ] Gradio demo: upload a slice -> mask overlay + tumor area.
+7. [x] Error analysis: best/median/worst patient overlays, Dice vs tumor size plot, 3 failure modes.
+8. [x] Gradio demo: upload a slice -> mask overlay + tumor area.
 9. [ ] README (problem, data, method, results table, figures, how to run, limitations,
        "research demo, not for clinical use"), requirements.txt, .gitignore data/ and checkpoints.

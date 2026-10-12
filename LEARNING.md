@@ -29,3 +29,13 @@
 - What: evaluated best.pt (epoch 27) on 17 test patients; per-patient pooled Dice on tumor-only slices 0.778 ± 0.271 (IoU 0.695 ± 0.268), all slices 0.770 ± 0.273; median 0.890; two patients (FG_A60K over-segmented, HT_A5RC nearly missed) cause most of the spread.
 - Why: tumor-only measures how well the tumor is outlined; all-slices additionally penalizes false alarms on healthy slices; per-patient pooling matches how a scan is read and is not inflated by empty slices.
 - Wrong result looks like: test ≫ val (leakage), all-slices ≫ tumor-only (empty slices inflating the score), or evaluate.py on val not reproducing the checkpoint's 0.8546.
+
+## Step 7 — Error analysis
+- What: ranked test patients (best FG_7634 0.944, median CS_4944 0.890, worst HT_A5RC 0.036), plotted Dice vs tumor size (ρ = 0.65; <250 px slices average 0.04), and found 3 failure modes: hemisphere-wide over-segmentation on a grayscale scan, a whole tumor missed on a scan with a dark FLAIR channel, and small/edge-slice tumors missed.
+- Why: a mean ± std hides *how* the model fails; each candidate explanation was tested against all 110 patients (grayscale and dark-FLAIR scans also occur in train/val and score well there), so we don't overclaim causes.
+- Wrong result looks like: overlays where GT and prediction are offset everywhere (pipeline bug, not a model failure), failure explanations that also describe well-scoring patients, or Dice that does *not* rise with tumor size (suggests the metric or thresholding is off).
+
+## Step 8 — Gradio demo
+- What: src/app.py loads best.pt and returns a red overlay plus tumor area for an uploaded slice (any size/mode; resized to 256 and back), with a threshold slider and 3 PNG examples; verified pixel-for-pixel against evaluate.py and via the live server's API.
+- Why: the demo must use exactly the same preprocessing as training/eval, or it silently shows worse (or different) results than the reported metrics.
+- Wrong result looks like: demo area differing from evaluate.py on the same slice (normalization/channel-order mismatch), overlays shifted after resizing, or tumor "detected" on every slice (threshold or sigmoid missing).
