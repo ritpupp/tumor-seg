@@ -1,8 +1,8 @@
 # PLAN: brain tumor segmentation (LGG MRI). Tick each box only with evidence.
-1. [ ] Inspect data: count patients/slices, confirm every image has a mask, parse patient ID
+1. [x] Inspect data: count patients/slices, confirm every image has a mask, parse patient ID
        from folder names, report % of slices with empty masks, save outputs/samples.png
        (6 image+mask overlays). DONE WHEN: counts printed and overlays visibly aligned.
-2. [ ] Patient-level split 70/15/15 -> splits.json. DONE WHEN: assert no patient is in two sets.
+2. [x] Patient-level split 70/15/15 -> splits.json. DONE WHEN: assert no patient is in two sets.
 3. [ ] Dataset + dataloader + augmentation (flips, small rotation, brightness), normalize.
        DONE WHEN: batch shapes printed, outputs/aug_preview.png looks sane.
 4. [ ] Model: smp.Unet(resnet34, imagenet weights), Dice+BCE loss. Overfit test on 16 images.
