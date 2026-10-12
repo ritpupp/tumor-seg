@@ -96,7 +96,47 @@ Minor: a few false positives on FLAIR-bright non-tumor regions (e.g. periventric
 ## Packaging (step 9)
 README.md written with the results above; requirements.txt pinned; data/, .venv/, checkpoints/ and *.pt are git-ignored.
 
-## v2 (branch v2-norm) — setup only, not yet trained
-Flags: `--norm per-image` (head-region per-channel standardization) and `--aug strong` (intensity only). Everything else identical to v1 (splits.json, seed 42, 40 epochs, resnet34 U-Net, Dice+BCE, AdamW 1e-3, batch 16).
-Smoke test (50 slices, 3 epochs, per-image + strong): runs end to end, checkpoint stores norm/aug. Preview: `outputs/aug_preview_v2.png`.
-Test set NOT evaluated for v2. Model selection by val per-patient Dice only.
+## v2 (branch v2-norm): per-image normalization — comparison only, NOT the headline model
+v2 = v1 with one change: `--norm per-image` (each channel standardized over the head region; `--aug basic` as v1).
+Same splits.json, seed 42, 40 epochs, resnet34 U-Net, Dice+BCE. Best epoch 37 by val (val curve flat from epoch ~21).
+Test evaluated once (`logs/v2_eval_test.log`); v1 test numbers are the committed step-6 CSVs (not re-run).
+**v1 remains the headline model**: it was chosen by val, and v2 is slightly *worse* on val.
+
+| Metric | v1 | v2 |
+|---|---|---|
+| Test Dice, tumor-only (mean ± std) | 0.778 ± 0.271 | 0.814 ± 0.226 |
+| Test IoU, tumor-only (mean ± std) | 0.695 ± 0.267 | 0.729 ± 0.225 |
+| Test Dice, tumor-only (median) | 0.890 | 0.902 |
+| Test IoU, tumor-only (median) | 0.802 | 0.821 |
+| Test Dice, all slices (mean ± std) | 0.770 ± 0.273 | 0.805 ± 0.224 |
+| Test IoU, all slices (mean ± std) | 0.684 ± 0.266 | 0.714 ± 0.224 |
+| Test Dice HT_A5RC (tumor-only) | 0.036 | 0.676 |
+| Test Dice FG_A60K (tumor-only) | 0.121 | 0.000 |
+| Test false-positive empty slices | 30/359 | 13/359 |
+| Test tumor slices with no prediction | 31/230 | 37/230 |
+| Test slice Dice, tumor <250 px (n=24) | 0.042 (missed 10) | 0.219 (missed 16) |
+| Test slice Dice, tumor 250-500 px (n=28) | 0.482 (missed 4) | 0.536 (missed 9) |
+| Test slice Dice, tumor 500-1k px (n=35) | 0.530 (missed 7) | 0.527 (missed 11) |
+| Test slice Dice, tumor 1k-2k px (n=72) | 0.763 (missed 9) | 0.858 (missed 1) |
+| Test slice Dice, tumor >2k px (n=71) | 0.888 (missed 1) | 0.899 (missed 0) |
+| Val Dice, tumor-only (mean ± std) | 0.873 ± 0.077 | 0.864 ± 0.087 |
+| Val IoU, tumor-only (mean ± std) | 0.782 ± 0.111 | 0.770 ± 0.120 |
+| Val Dice, tumor-only (median) | 0.893 | 0.893 |
+| Val Dice, all slices (mean ± std) [selection metric] | 0.855 ± 0.106 | 0.844 ± 0.120 |
+
+Size buckets **excluding HT_A5RC and FG_A60K** (so the two outliers don't drive them):
+
+| Tumor area | n | v1 Dice (missed) | v2 Dice (missed) |
+|---|---|---|---|
+| < 250 px | 12 | 0.077 (8) | 0.367 (5) |
+| 250–500 px | 22 | 0.592 (4) | 0.683 (3) |
+| 500–1k px | 23 | 0.722 (3) | 0.750 (2) |
+| 1k–2k px | 64 | 0.853 (2) | 0.876 (0) |
+| > 2k px | 70 | 0.901 (0) | 0.906 (0) |
+
+- Paired per-patient tumor-only Dice: v2 better on 5, worse on 2, within ±0.01 on 10 of 17; median diff +0.004.
+- Most of the +0.036 test mean comes from **HT_A5RC: 0.036 → 0.676** (alone ≈ +0.038 on the mean). Excluding HT_A5RC and FG_A60K: 0.871 → 0.878.
+- **FG_A60K: 0.121 → 0.000.** The failure changed type: v1 over-segmented (73,861 px predicted vs 7,719 GT); v2 predicts nothing on 23/24 tumor slices (160 px, 0 overlap). FP px on its empty slices 24,475 → 5,375.
+- Test false-positive empty slices 30 → 13; tumor slices with no prediction 31 → 37 (the increase is FG_A60K).
+- Val (selection metric, all slices): v1 0.855 ± 0.106 vs v2 0.844 ± 0.120; tumor-only 0.873 vs 0.864. Val does not favour v2.
+- Caveats: one training run per model, 17 test patients; the test gain is dominated by one patient, so this does not show v2 is better in general. Full table: `outputs/v2/v1_vs_v2.md`.
