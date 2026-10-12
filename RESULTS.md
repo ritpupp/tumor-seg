@@ -35,7 +35,7 @@ Dice/IoU computed per patient with pixels pooled over that patient's slices; mea
 
 | Metric | Dice | IoU |
 |---|---|---|
-| **Tumor-containing slices only (headline)** | **0.778 ± 0.271** | **0.695 ± 0.268** |
+| **Tumor-containing slices only (headline)** | **0.778 ± 0.271** | **0.695 ± 0.267** |
 | All slices | 0.770 ± 0.273 | 0.684 ± 0.266 |
 | Tumor-only, median over patients | 0.890 | 0.802 |
 | Tumor-only, excluding 2 failure patients (n=15) | 0.871 ± 0.096 | 0.783 ± 0.128 |

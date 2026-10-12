@@ -7,7 +7,7 @@ A U-Net that outlines lower-grade glioma (LGG) on single brain MRI slices, train
 patient-level split, plus an error analysis and a Gradio demo.
 
 **Headline result (17 held-out test patients, tumor-containing slices only):
-Dice 0.778 ± 0.271, IoU 0.695 ± 0.268 (median patient Dice 0.890).**
+Dice 0.778 ± 0.271, IoU 0.695 ± 0.267 (median patient Dice 0.890).**
 
 ![Best, median and worst test patients](outputs/patients_best_median_worst.png)
 *Green = ground truth, red dashed = prediction. Rows: best, median and worst test patient by Dice.*
@@ -60,7 +60,7 @@ Dice and IoU are computed **per patient**, pooling pixels over that patient's sl
 
 | Test set (17 patients) | Dice | IoU |
 |---|---|---|
-| **Tumor-containing slices only (headline)** | **0.778 ± 0.271** | **0.695 ± 0.268** |
+| **Tumor-containing slices only (headline)** | **0.778 ± 0.271** | **0.695 ± 0.267** |
 | All slices (also penalizes false alarms on tumor-free slices) | 0.770 ± 0.273 | 0.684 ± 0.266 |
 | Tumor-only, median patient | 0.890 | 0.802 |
 | Tumor-only, excluding the 2 failure patients (n=15) | 0.871 ± 0.096 | 0.783 ± 0.128 |
@@ -97,6 +97,68 @@ Full per-patient table: [RESULTS.md](RESULTS.md) and [`outputs/test_per_patient.
    are only 15% of tumor slices.
 
 ![Failure cases](outputs/failure_cases.png)
+
+## v1 vs v2 (per-image normalization)
+
+v2 changes one thing from v1: each image channel is standardized by its own mean and standard deviation over
+the head region (`--norm per-image`), instead of ImageNet statistics. Everything else is identical (same
+`splits.json`, seed 42, 40 epochs, ResNet-34 U-Net, Dice+BCE loss, same augmentation).
+
+**v1 remains the headline model, because it won on validation**, which is the only set used to choose a model
+(val per-patient Dice, all slices: v1 0.855 vs v2 0.844).
+
+Read the test comparison with these caveats:
+
+- **It is one training run per model, on 17 test patients**, and **one patient (HT_A5RC) drives most of the gain**:
+  its Dice goes from 0.036 to 0.676, which alone moves the 17-patient mean by about 0.038. Per patient, v2 is better
+  on 5, worse on 2 and within ±0.01 on 10 (median difference +0.004).
+- **FG_A60K got worse, from 0.121 to 0.000.** The failure changed type: v1 over-segmented this patient, while v2
+  predicts no tumor on 23 of its 24 tumor slices.
+- **The comparison is not independent.** Per-image normalization was chosen *after* seeing the test-set failures
+  in the error analysis, so the test set has influenced the design of v2.
+- **The dark-FLAIR explanation for HT_A5RC is supported by this result, but not proven.** HT_A5RC has an unusually
+  dark FLAIR channel, and per-image normalization largely fixes it; but a validation patient with a similarly dark
+  FLAIR channel was already segmented well by v1, and this is a single run.
+
+Both versions of the test comparison are shown below: all 17 patients, and without the two failure patients
+(HT_A5RC and FG_A60K).
+
+**All 17 test patients** (from [`outputs/v2/v1_vs_v2.md`](outputs/v2/v1_vs_v2.md)):
+
+| Metric | v1 | v2 |
+|---|---|---|
+| Test Dice, tumor-only (mean ± std) | 0.778 ± 0.271 | 0.814 ± 0.226 |
+| Test IoU, tumor-only (mean ± std) | 0.695 ± 0.267 | 0.729 ± 0.225 |
+| Test Dice, tumor-only (median) | 0.890 | 0.902 |
+| Test IoU, tumor-only (median) | 0.802 | 0.821 |
+| Test Dice, all slices (mean ± std) | 0.770 ± 0.273 | 0.805 ± 0.224 |
+| Test IoU, all slices (mean ± std) | 0.684 ± 0.266 | 0.714 ± 0.224 |
+| Test Dice HT_A5RC (tumor-only) | 0.036 | 0.676 |
+| Test Dice FG_A60K (tumor-only) | 0.121 | 0.000 |
+| Test false-positive empty slices | 30/359 | 13/359 |
+| Test tumor slices with no prediction | 31/230 | 37/230 |
+| Test slice Dice, tumor <250 px (n=24) | 0.042 (missed 10) | 0.219 (missed 16) |
+| Test slice Dice, tumor 250-500 px (n=28) | 0.482 (missed 4) | 0.536 (missed 9) |
+| Test slice Dice, tumor 500-1k px (n=35) | 0.530 (missed 7) | 0.527 (missed 11) |
+| Test slice Dice, tumor 1k-2k px (n=72) | 0.763 (missed 9) | 0.858 (missed 1) |
+| Test slice Dice, tumor >2k px (n=71) | 0.888 (missed 1) | 0.899 (missed 0) |
+| Val Dice, tumor-only (mean ± std) | 0.873 ± 0.077 | 0.864 ± 0.087 |
+| Val IoU, tumor-only (mean ± std) | 0.782 ± 0.111 | 0.770 ± 0.120 |
+| Val Dice, tumor-only (median) | 0.893 | 0.893 |
+| Val Dice, all slices (mean ± std) [selection metric] | 0.855 ± 0.106 | 0.844 ± 0.120 |
+
+**Without HT_A5RC and FG_A60K** (15 test patients): mean tumor-only Dice v1 0.871 vs v2 0.878. Tumor slices by size:
+
+| Tumor area | n | v1 Dice (missed) | v2 Dice (missed) |
+|---|---|---|---|
+| < 250 px | 12 | 0.077 (8) | 0.367 (5) |
+| 250–500 px | 22 | 0.592 (4) | 0.683 (3) |
+| 500–1k px | 23 | 0.722 (3) | 0.750 (2) |
+| 1k–2k px | 64 | 0.853 (2) | 0.876 (0) |
+| > 2k px | 70 | 0.901 (0) | 0.906 (0) |
+
+Without the two outliers v2 is ahead in every size bucket, most for the smallest tumors, but the < 250 px bucket
+has only 12 slices. v2's training curves: [`outputs/v2/train_curves.png`](outputs/v2/train_curves.png).
 
 ## Demo
 
