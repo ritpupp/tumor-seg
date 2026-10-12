@@ -24,3 +24,8 @@
 - What: train.py (--data-dir required, AdamW 1e-3 + cosine LR, fp16 autocast+GradScaler on CUDA, best.pt saved by val per-patient Dice, curves + history json every epoch); smoke run 3 epochs × 50 slices on MPS ran end to end and best.pt reloads with all keys matched.
 - Why: per-patient Dice (pixels pooled across a patient's slices) is the selection metric because ~65% of slices are empty and per-slice Dice rewards predicting nothing on them; the smoke run catches crashes before paying for GPU time.
 - Wrong result looks like: val Dice flat at 0 after many full epochs, train loss falling while val loss climbs from early on (overfitting / leakage of aug into val), NaN loss under AMP, or per-slice Dice ≫ per-patient Dice (model just predicting empty).
+
+## Step 6 — Test evaluation
+- What: evaluated best.pt (epoch 27) on 17 test patients; per-patient pooled Dice on tumor-only slices 0.778 ± 0.271 (IoU 0.695 ± 0.268), all slices 0.770 ± 0.273; median 0.890; two patients (FG_A60K over-segmented, HT_A5RC nearly missed) cause most of the spread.
+- Why: tumor-only measures how well the tumor is outlined; all-slices additionally penalizes false alarms on healthy slices; per-patient pooling matches how a scan is read and is not inflated by empty slices.
+- Wrong result looks like: test ≫ val (leakage), all-slices ≫ tumor-only (empty slices inflating the score), or evaluate.py on val not reproducing the checkpoint's 0.8546.
